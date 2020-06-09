@@ -1,0 +1,39 @@
+#!/bin/bash
+echo "The APP_JAVA_OPTS is:${APP_JAVA_OPTS}"
+
+function get_jar_name()
+{
+    APP_JAR_PATTERN="\.jar$"
+    FILE_NAMES=`ls -l ${RUN_DIR} | awk {'print $9'} | grep "${APP_JAR_PATTERN}"`
+    
+
+    if [ -n "${FILE_NAMES}" ]; then
+      for i in ${FILE_NAMES}; do
+        JAR_FULL_NAME="$i"
+        echo "The jar full name is:${JAR_FULL_NAME}"
+        # Use the first match jar file.
+        break
+      done
+    fi
+
+    if [ -z "${JAR_FULL_NAME}" ]; then
+      echo "Cannot find any jar files under ${RUN_DIR} by pattern:${APP_JAR_PATTERN}."
+      exit 0
+    fi
+}
+
+RUN_DIR=/home/admin/release/run
+JAR_FULL_NAME=""
+
+if [ -d "${RUN_DIR}" ]; then
+  get_jar_name
+
+  cd ${RUN_DIR}
+  SOFA_RUN_CMD="java ${APP_JAVA_OPTS} -jar ${JAR_FULL_NAME} --spring.config.location=file:${SOFA_APP_PROPS_FILE_PATH}"
+  echo -e "Use the command ${SOFA_RUN_CMD} to run ${ANTCLOUD_APP_SVC_NAME},\nwith the Environment:\n$(env)."
+  java ${APP_JAVA_OPTS} -jar ${JAR_FULL_NAME} --spring.config.location=file:${SOFA_APP_PROPS_FILE_PATH},classpath:/,classpath:/config/
+
+else
+  echo "The ${RUN_DIR} is not presented, can not start the application ${ANTCLOUD_APP_SVC_NAME}."
+  exit 0
+fi
